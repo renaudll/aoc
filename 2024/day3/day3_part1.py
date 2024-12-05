@@ -1,15 +1,8 @@
-from pathlib import Path
 import re
+from pathlib import Path
 
-def read_input():
-    path = Path("input.txt")
-    return path.read_text(encoding="utf-8")
-
-data = read_input()
+data = Path("input.txt").read_text(encoding="utf-8")
 regex = r"mul\((\d+),(\d+)\)"
-
 result = re.findall(regex, data)
-total = 0
-for a, b in result:
-    total += int(a) * int(b)
+total = sum(int(a) * int(b) for a, b in result)
 print(total)
