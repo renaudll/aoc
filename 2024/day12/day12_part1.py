@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from pathlib import Path
 from dataclasses import dataclass
 GRID = Path("input.txt").read_text(encoding="utf-8").split("\n")
@@ -11,9 +13,6 @@ class Region:
     coordinates: set[tuple[int, int]]
     area: int = 0
     perimeter: int = 0
-
-    def is_touching(self, x, y):
-        return (x, y - 1) in self.coordinates
 
     def compute_dimensions(self):
         self.area = len(self.coordinates)
@@ -30,44 +29,54 @@ class Region:
                 perimeter += 1
         self.perimeter = perimeter
 
+
+unexplored = {(x, y) for x in range(GRID_WIDTH) for y in range(GRID_HEIGHT)}
+region_by_coord = {}
 regions = []
-previous_line_regions = []
-current_line_regions = []
-for y, line in enumerate(GRID):
-    previous_line_regions = current_line_regions
-    current_line_regions = []
-    current_cluster_letter = None
-    current_cluster_coords = set()
-    for x in range(GRID_WIDTH+1):  # last iteration is to flush the last cluster
-        coord = (x, y)
+priority = set()
 
-        # Get char
-        if x < GRID_WIDTH:
-            char = line[x]
+while unexplored:
+    if priority:
+        x, y = priority.pop()
+        unexplored.remove((x, y))
+    else:
+        x, y = unexplored.pop()
+    letter = GRID[y][x]
 
-            if current_cluster_letter is None:
-                current_cluster_letter = char
-        else:
-            char = None  # will force the cluster to end
+    # Find region to merge with
+    left_coord = (x-1, y) if x > 0 else None
+    right_coord = (x+1, y) if x < GRID_WIDTH-1 else None
+    top_coord = (x, y-1) if y > 0 else None
+    bottom_coord = (x, y+1) if y < GRID_HEIGHT-1 else None
+    left_letter = GRID[y][x-1] if left_coord else None
+    right_letter = GRID[y][x+1] if right_coord else None
+    top_letter = GRID[y-1][x] if top_coord else None
+    bottom_letter = GRID[y+1][x] if bottom_coord else None
 
-        # Add char to cluster if applicable
-        is_new_letter = char != current_cluster_letter
-        if not is_new_letter:
-            current_cluster_coords.add(coord)
-        # Push cluster when it end
-        if is_new_letter:  # still reading cluster:
-            # Do we need to merge it with an existing region?
-            for region in previous_line_regions:
-                if region.letter == current_cluster_letter and any(region.is_touching(*coord) for coord in current_cluster_coords):
-                    region.coordinates.update(current_cluster_coords)
-                    break
-            else:
-                region = Region(current_cluster_letter, current_cluster_coords)
-                regions.append(region)
-            current_line_regions.append(region)
-            current_cluster_coords = {coord}
+    candidates = []
+    if left_letter == letter:
+        candidates.append(left_coord)
+    if right_letter == letter:
+        candidates.append(right_coord)
+    if top_letter == letter:
+        candidates.append(top_coord)
+    if bottom_letter == letter:
+        candidates.append(bottom_coord)
 
-        current_cluster_letter = char
+    region = None
+    for candidate in candidates:
+        candidate_region = region_by_coord.get(candidate)
+        if candidate_region:
+            region = candidate_region
+        if candidate in unexplored:
+            priority.add(candidate)
+
+    if region:
+        region.coordinates.add((x, y))
+    else:
+        region = Region(letter, {(x, y)})
+        regions.append(region)
+    region_by_coord[(x, y)] = region
 
 for region in regions:
     region.compute_dimensions()
@@ -76,5 +85,3 @@ for region in regions:
 total = sum(region.area * region.perimeter for region in regions)
 
 print(total)
-
-# 1133206 is too low
