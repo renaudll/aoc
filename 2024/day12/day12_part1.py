@@ -36,25 +36,38 @@ current_line_regions = []
 for y, line in enumerate(GRID):
     previous_line_regions = current_line_regions
     current_line_regions = []
-    previous_letter = None
+    current_cluster_letter = None
     current_cluster_coords = set()
-    for x, char in enumerate(line):
+    for x in range(GRID_WIDTH+1):  # last iteration is to flush the last cluster
         coord = (x, y)
-        if previous_letter is None:
-            previous_letter = char
-        if char == previous_letter:
-            current_cluster_coords.add(coord)
 
-        if char != previous_letter or x == GRID_WIDTH-1:  # still reading cluster:
+        # Get char
+        if x < GRID_WIDTH:
+            char = line[x]
+
+            if current_cluster_letter is None:
+                current_cluster_letter = char
+        else:
+            char = None  # will force the cluster to end
+
+        # Add char to cluster if applicable
+        is_new_letter = char != current_cluster_letter
+        if not is_new_letter:
+            current_cluster_coords.add(coord)
+        # Push cluster when it end
+        if is_new_letter:  # still reading cluster:
             # Do we need to merge it with an existing region?
             for region in previous_line_regions:
-                if region.letter == previous_letter and any(region.is_touching(*coord) for coord in current_cluster_coords):
+                if region.letter == current_cluster_letter and any(region.is_touching(*coord) for coord in current_cluster_coords):
                     region.coordinates.update(current_cluster_coords)
                     break
             else:
-                region = Region(previous_letter, current_cluster_coords)
-                current_line_regions.append(region)
+                region = Region(current_cluster_letter, current_cluster_coords)
                 regions.append(region)
+            current_line_regions.append(region)
+            current_cluster_coords = {coord}
+
+        current_cluster_letter = char
 
 for region in regions:
     region.compute_dimensions()
@@ -64,3 +77,4 @@ total = sum(region.area * region.perimeter for region in regions)
 
 print(total)
 
+# 1133206 is too low
