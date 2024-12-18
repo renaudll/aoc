@@ -1,9 +1,7 @@
-import re
 import itertools
 from pathlib import Path
 from aoc_utils import Vector2D
 
-REGEX = re.compile(r"")
 
 MOVE_LEFT = "<"
 MOVE_UP = "^"
@@ -211,6 +209,7 @@ def _validate():
             if cell1 == "[" and cell2 != "]":
                 raise ValueError(f"Invalid cell at {x1} {y}")
 
+# Process
 instructions = list(instructions_str)
 for instruction in instructions:
     if instruction == "\n":
@@ -226,6 +225,7 @@ for instruction in instructions:
         _validate()
         print()
 
+# Get answer
 sum = 0
 for x in range(grid_width):
     for y in range(grid_height):

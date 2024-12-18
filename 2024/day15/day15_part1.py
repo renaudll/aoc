@@ -1,9 +1,7 @@
-import re
 from dataclasses import dataclass
 from pathlib import Path
 from aoc_utils import Vector2D
 
-REGEX = re.compile(r"")
 
 MOVE_LEFT = "<"
 MOVE_UP = "^"
@@ -137,4 +135,3 @@ for x in range(grid_width):
         if grid[y][x] == BOX:
             sum += 100 * y + x
 print(sum)
-# Process
